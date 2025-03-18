@@ -116,12 +116,14 @@ public class DossierService {
                 .orElseThrow(() -> new TechnicalException(messages.get(GlobalConstants.CASE_NOT_FOUND)));
     }
 
-    public void deleteCase(Long id) throws TechnicalException {
+     public void deleteCase(Long id) throws TechnicalException {
         log.debug("Start service delete case By Id {}", id);
         if (id == null) {
             throw new TechnicalException(messages.get(GlobalConstants.CASE_NOT_FOUND));
         }
-        dossierRepository.deleteById(id);
+        Dossier dossier = dossierRepository.findById(id)
+                .orElseThrow(() -> new TechnicalException(messages.get(GlobalConstants.CASE_NOT_FOUND)));
+        dossierRepository.delete(dossier);
         log.debug("End service delete case By Id {}", id);
     }
 
