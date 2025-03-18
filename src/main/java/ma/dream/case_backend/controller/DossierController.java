@@ -59,10 +59,15 @@ public class DossierController {
 
     @Operation(summary = "Delete a case", description = "Supprime un case par ID")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCase (@PathVariable Long id) throws TechnicalException {
+    public ResponseEntity<Void> deleteCase(@PathVariable Long id) {
         log.info("delete case by id: {}", id);
-        dossierService.deleteCase(id);
-        return ResponseEntity.noContent().build();
+        try {
+            dossierService.deleteCase(id);
+            return ResponseEntity.noContent().build();
+        } catch (TechnicalException e) {
+            log.error("Error deleting case: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
     }
 
 }
