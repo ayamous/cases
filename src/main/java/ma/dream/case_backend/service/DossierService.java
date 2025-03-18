@@ -15,15 +15,12 @@ import ma.dream.case_backend.mapper.DossierMapper;
 import ma.dream.case_backend.model.Dossier;
 import ma.dream.case_backend.repository.DossierRepository;
 import ma.dream.case_backend.util.constants.GlobalConstants;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -37,16 +34,6 @@ public class DossierService {
     private final DossierMapper dossierMapper;
     private final EntityManager entityManager;
     private final Messages messages;
-
-    Path imageStoragePath = Paths.get("product-images");
-
-    @Autowired
-    public DossierService(DossierRepository dossierRepository, DossierMapper dossierMapper, EntityManager entityManager, Messages messages) {
-        this.dossierRepository = dossierRepository;
-        this.dossierMapper = dossierMapper;
-        this.entityManager = entityManager;
-        this.messages = messages;
-    }
 
 
     public Dossier createCase(DossierDto dossierDto) {
