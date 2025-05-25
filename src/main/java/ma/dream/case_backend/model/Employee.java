@@ -1,12 +1,14 @@
 package ma.dream.case_backend.model;
 
+
 import jakarta.persistence.*;
 import lombok.*;
+import ma.dream.case_backend.enums.StatutEmploye;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-
 
 @Entity
 @Getter
@@ -14,21 +16,27 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 @AllArgsConstructor
-public class Dossier {
+public class Employee {
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long caseId;
+    private Long employeId;
+    private String nom;
+    private String role;
+    private String departement;
+    private String mobile;
+    private LocalDate dateEmbauche;
+    private String email;
+    private String genre;
+    private String adresse;
+
+    @Enumerated(EnumType.STRING)
+    private StatutEmploye statut;
 
     @CreationTimestamp
     private LocalDateTime creationDate;
 
     @UpdateTimestamp
     private LocalDateTime lastUpdateDate;
-
-    private String title;
-
-    @Column(length = 2056)
-    private String description;
-
 }

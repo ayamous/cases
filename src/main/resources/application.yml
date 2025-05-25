@@ -5,7 +5,7 @@ spring:
   application:
     name: dream-case-api
   datasource:
-    url: jdbc:postgresql://localhost:5432/dreamcaseappdb?currentSchema=public
+    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=public
     username: postgres
     password: admin
     driver-class-name: org.postgresql.Driver
