@@ -11,6 +11,10 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ma.dream.case_backend.config.Messages;
 import ma.dream.case_backend.dto.EmployeeDto;
+import ma.dream.case_backend.dto.EmployeeStatutCountDto;
+import ma.dream.case_backend.dto.PresenceStatutCountDto;
+import ma.dream.case_backend.enums.StatutEmploye;
+import ma.dream.case_backend.enums.StatutPresence;
 import ma.dream.case_backend.exceptions.TechnicalException;
 import ma.dream.case_backend.mapper.EmployeeMapper;
 import ma.dream.case_backend.model.Employee;
@@ -25,6 +29,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -135,6 +140,15 @@ public class EmployeeService {
         employeRepository.delete(employee);
         log.debug("End service delete employee By Id {}", id);
     }
+
+    public List<EmployeeStatutCountDto> countEmployeesByStatut() {
+        List<Object[]> results = employeRepository.countEmployeesByStatut();
+
+        return results.stream()
+                .map(row -> new EmployeeStatutCountDto((StatutEmploye) row[0], (Long) row[1]))
+                .collect(Collectors.toList());
+    }
+
 
 
 }

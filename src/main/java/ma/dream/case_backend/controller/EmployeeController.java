@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ma.dream.case_backend.dto.EmployeeDto;
+import ma.dream.case_backend.dto.EmployeeStatutCountDto;
 import ma.dream.case_backend.exceptions.TechnicalException;
 import ma.dream.case_backend.model.Employee;
 import ma.dream.case_backend.service.EmployeeService;
@@ -12,6 +13,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/employes")
@@ -70,5 +73,11 @@ public class EmployeeController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
+
+    @GetMapping("/count-by-statut/all")
+    public ResponseEntity<List<EmployeeStatutCountDto>> getCountByStatut() {
+        return ResponseEntity.ok(employeeService.countEmployeesByStatut());
+    }
+
 
 }
