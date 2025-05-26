@@ -8,7 +8,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
@@ -26,16 +25,16 @@ public class PresenceJour {
     private Long presenceJourId;
 
     @ManyToOne
-    private Employee employe;
+    private Employee employee;
 
-    private LocalDate date;
     private LocalTime firstIn;
     private LocalTime breakTime;
     private LocalTime lastOut;
     private Duration totalHeures;
 
     @Enumerated(EnumType.STRING)
-    private StatutPresence statut; // TERMINE, ABSENT, PRESENT
+    private StatutPresence statut;
+    private String note;
 
     private String shift;
 

@@ -11,10 +11,12 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface PresenceJourMapper {
 
-    @Mapping(source = "employe.employeId", target = "employeId")
+    @Mapping(source = "employee.employeeId", target = "employeeId")
+    @Mapping(source = "employee.nom", target = "employeeName")
     PresenceJourDto toPresenceJourDto(PresenceJour presenceJour);
 
-    @Mapping(source = "employeId", target = "employe.employeId")
+    @Mapping(source = "employeeId", target = "employee.employeeId")
+    @Mapping(source = "employeeName", target = "employee.nom")
     PresenceJour toPresenceJour(PresenceJourDto presenceJourDto);
 
     List<PresenceJourDto> toPresenceJourDtos(List<PresenceJour> presenceJours);

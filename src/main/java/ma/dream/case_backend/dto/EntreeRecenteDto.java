@@ -14,12 +14,9 @@ import java.time.LocalTime;
 public class EntreeRecenteDto {
 
     private Long entreeRecenteId;
-
-    private Long employeId;
-
+    private Long employeeId;
     private LocalTime heure;
     private String portail;
-
     private LocalDate date;
 
 }

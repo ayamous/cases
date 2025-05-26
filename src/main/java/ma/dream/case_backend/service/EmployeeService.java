@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import ma.dream.case_backend.config.Messages;
 import ma.dream.case_backend.dto.EmployeeDto;
 import ma.dream.case_backend.exceptions.TechnicalException;
-import ma.dream.case_backend.mapper.EmployeMapper;
+import ma.dream.case_backend.mapper.EmployeeMapper;
 import ma.dream.case_backend.model.Employee;
 import ma.dream.case_backend.repository.EmployeRepository;
 import ma.dream.case_backend.util.constants.GlobalConstants;
@@ -32,13 +32,13 @@ import java.util.List;
 public class EmployeeService {
 
     private final EmployeRepository employeRepository;
-    private final EmployeMapper employeMapper;
+    private final EmployeeMapper employeeMapper;
     private final EntityManager entityManager;
     private final Messages messages;
 
 
     public Employee createEmployee(EmployeeDto employeeDto) {
-        Employee employeeEntity = employeMapper.toEmploye(employeeDto);
+        Employee employeeEntity = employeeMapper.toEmployee(employeeDto);
 
         employeeEntity.setCreationDate(LocalDateTime.now());
         employeeEntity.setLastUpdateDate(LocalDateTime.now());
@@ -58,7 +58,7 @@ public class EmployeeService {
         }
 
         List<EmployeeDto> employeeDtos = employees.getContent().stream()
-                .map(employeMapper::toEmployeDto)
+                .map(employeeMapper::toEmployeeDto)
                 .toList();
         log.debug("End service getEmployeeByCriteria ");
         return new PageImpl<>(employeeDtos, pageable, employees.getTotalElements());
@@ -115,13 +115,13 @@ public class EmployeeService {
 
         employee.setLastUpdateDate(LocalDateTime.now(ZoneOffset.UTC));
         log.debug("End service update employee  with id {}, employee {}", id, employeeDto);
-        return employeMapper.toEmployeDto(employeRepository.save(employee));
+        return employeeMapper.toEmployeeDto(employeRepository.save(employee));
     }
 
     public EmployeeDto getEmployeeById(Long id) throws TechnicalException {
         log.debug("Start service get employee By Id {}", id);
         return employeRepository.findById(id)
-                .map(employeMapper::toEmployeDto)
+                .map(employeeMapper::toEmployeeDto)
                 .orElseThrow(() -> new TechnicalException(messages.get(GlobalConstants.CASE_NOT_FOUND)));
     }
 
@@ -130,9 +130,9 @@ public class EmployeeService {
         if (id == null) {
             throw new TechnicalException(messages.get(GlobalConstants.CASE_NOT_FOUND));
         }
-        Employee dossier = employeRepository.findById(id)
+        Employee employee = employeRepository.findById(id)
                 .orElseThrow(() -> new TechnicalException(messages.get(GlobalConstants.CASE_NOT_FOUND)));
-        employeRepository.delete(dossier);
+        employeRepository.delete(employee);
         log.debug("End service delete employee By Id {}", id);
     }
 

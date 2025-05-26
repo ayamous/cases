@@ -5,7 +5,6 @@ import lombok.*;
 import ma.dream.case_backend.enums.StatutPresence;
 
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Getter
@@ -17,15 +16,15 @@ public class PresenceJourDto {
 
     private Long presenceJourId;
 
-    private Long employeId;
+    private Long employeeId;
+    private String employeeName;
 
-    private LocalDate date;
     private LocalTime firstIn;
     private LocalTime breakTime;
     private LocalTime lastOut;
     private Duration totalHeures;
     private StatutPresence statut;
     private String shift;
-
+    private String note;
 
 }

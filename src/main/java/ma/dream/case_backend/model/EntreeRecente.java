@@ -22,7 +22,7 @@ public class EntreeRecente {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long entreeRecenteId;
     @ManyToOne
-    private Employee employe;
+    private Employee employee;
 
     private LocalTime heure;
     private String portail;

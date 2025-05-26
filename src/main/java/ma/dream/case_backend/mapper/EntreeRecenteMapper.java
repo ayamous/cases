@@ -11,10 +11,10 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface EntreeRecenteMapper {
 
-    @Mapping(source = "employe.employeId", target = "employeId")
+    @Mapping(source = "employee.employeeId", target = "employeeId")
     EntreeRecenteDto toEntreeRecenteDto(EntreeRecente entreeRecente);
 
-    @Mapping(source = "employeId", target = "employe.employeId")
+    @Mapping(source = "employeeId", target = "employee.employeeId")
     EntreeRecente toEntreeRecente(EntreeRecenteDto entreeRecenteDto);
 
     List<EntreeRecenteDto> toEntreeRecenteDtos(List<EntreeRecente> entreeRecentes);
