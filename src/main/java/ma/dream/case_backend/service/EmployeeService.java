@@ -149,6 +149,10 @@ public class EmployeeService {
                 .collect(Collectors.toList());
     }
 
+    public long getTotalEmployees() {
+        return employeRepository.count();
+    }
+
 
 
 }

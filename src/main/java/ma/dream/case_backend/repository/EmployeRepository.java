@@ -14,4 +14,7 @@ public interface EmployeRepository extends JpaRepository<Employee, Long> {
     List<Object[]> countEmployeesByStatut();
 
 
+    //long count();
+
+
 }
