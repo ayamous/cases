@@ -41,11 +41,14 @@ public class EmployeeController {
             @RequestParam(defaultValue = "5") int size,
             @RequestParam(required = false) final String searchByNom,
             @RequestParam(required = false) final String searchByDepartement,
-            @RequestParam(required = false) final String searchByStatus
+            @RequestParam(required = false) final String searchByStatus,
+            @RequestParam(defaultValue = "lastUpdateDate") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction
     ) {
-        Page<EmployeeDto> employees = employeeService.getAllEmployees(page, size, searchByNom, searchByDepartement, searchByStatus);
+        Page<EmployeeDto> employees = employeeService.getAllEmployees(page, size, searchByNom, searchByDepartement, searchByStatus, sortBy, direction);
         return ResponseEntity.ok(employees);
     }
+
 
     @Operation(summary = "Update employee details", description = "Récupère les détails d'un employee par ID")
     @PutMapping("/{id}")

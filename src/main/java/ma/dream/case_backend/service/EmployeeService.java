@@ -3,10 +3,7 @@ package ma.dream.case_backend.service;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ma.dream.case_backend.config.Messages;
@@ -18,14 +15,12 @@ import ma.dream.case_backend.mapper.EmployeeMapper;
 import ma.dream.case_backend.model.Employee;
 import ma.dream.case_backend.repository.EmployeRepository;
 import ma.dream.case_backend.util.constants.GlobalConstants;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -49,9 +44,12 @@ public class EmployeeService {
         return employeRepository.save(employeeEntity);
     }
 
-    public Page<EmployeeDto> getAllEmployees(int page, int size, String searchByNom, String searchByDepartement, String searchByStatus) {
-        log.debug("Start service Get Employees page: {} size: {} searchByNom: {} searchEmail: {} , serchStatus: {}", page, size, searchByNom, searchByDepartement, searchByStatus);
-        Pageable pageable = PageRequest.of(page, size);
+    public Page<EmployeeDto> getAllEmployees(int page, int size, String searchByNom, String searchByDepartement, String searchByStatus, String sortBy, String direction) {
+        log.debug("Start service Get Employees page: {} size: {} sortBy: {} direction: {} searchByNom: {} searchByDepartement: {} searchByStatus: {}",
+                page, size, sortBy, direction, searchByNom, searchByDepartement, searchByStatus);
+
+        Sort sort = direction.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
         Page<Employee> employees;
 
         if (searchByNom != null || searchByDepartement != null || searchByStatus != null) {
@@ -67,16 +65,26 @@ public class EmployeeService {
         return new PageImpl<>(employeeDtos, pageable, employees.getTotalElements());
     }
 
-    private Page<Employee> filterEmployees(String searchByNom, String searchByDepartement, String searchByStatus,Pageable pageable) {
-        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Employee> criteriaQuery = criteriaBuilder.createQuery(Employee.class);
-        Root<Employee> root = criteriaQuery.from(Employee.class);
+    private Page<Employee> filterEmployees(String searchByNom, String searchByDepartement, String searchByStatus, Pageable pageable) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Employee> cq = cb.createQuery(Employee.class);
+        Root<Employee> root = cq.from(Employee.class);
 
-        Predicate predicate = buildPredicate(criteriaBuilder, root, searchByNom, searchByDepartement, searchByStatus);
-        criteriaQuery.where(predicate);
+        Predicate predicate = buildPredicate(cb, root, searchByNom, searchByDepartement, searchByStatus);
+        cq.where(predicate);
 
-        TypedQuery<Employee> typedQuery = entityManager.createQuery(criteriaQuery);
+        if (!pageable.getSort().isEmpty()) {
+            List<Order> orders = new ArrayList<>();
+            for (Sort.Order order : pageable.getSort()) {
+                Path<Object> path = root.get(order.getProperty());
+                orders.add(order.isAscending() ? cb.asc(path) : cb.desc(path));
+            }
+            cq.orderBy(orders);
+        }
+
+        TypedQuery<Employee> typedQuery = entityManager.createQuery(cq);
         long totalCount = typedQuery.getResultList().size();
+
         typedQuery.setFirstResult((int) pageable.getOffset());
         typedQuery.setMaxResults(pageable.getPageSize());
         List<Employee> resultList = typedQuery.getResultList();
