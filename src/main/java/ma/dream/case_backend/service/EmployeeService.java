@@ -49,13 +49,13 @@ public class EmployeeService {
         return employeRepository.save(employeeEntity);
     }
 
-    public Page<EmployeeDto> getAllEmployees(int page, int size, String searchByNom, String searchByEmail) {
-        log.debug("Start service Get Employees page: {} size: {} searchByNom: {} searchEmail: {} ", page, size, searchByNom, searchByEmail);
+    public Page<EmployeeDto> getAllEmployees(int page, int size, String searchByNom, String searchByDepartement, String searchByStatus) {
+        log.debug("Start service Get Employees page: {} size: {} searchByNom: {} searchEmail: {} , serchStatus: {}", page, size, searchByNom, searchByDepartement, searchByStatus);
         Pageable pageable = PageRequest.of(page, size);
         Page<Employee> employees;
 
-        if (searchByNom != null || searchByEmail != null ) {
-            employees = filterEmployees(searchByNom, searchByEmail, pageable);
+        if (searchByNom != null || searchByDepartement != null || searchByStatus != null) {
+            employees = filterEmployees(searchByNom, searchByDepartement, searchByStatus, pageable);
         } else {
             employees = employeRepository.findAll(pageable);
         }
@@ -67,12 +67,12 @@ public class EmployeeService {
         return new PageImpl<>(employeeDtos, pageable, employees.getTotalElements());
     }
 
-    private Page<Employee> filterEmployees(String searchByNom, String searchByEmail, Pageable pageable) {
+    private Page<Employee> filterEmployees(String searchByNom, String searchByDepartement, String searchByStatus,Pageable pageable) {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Employee> criteriaQuery = criteriaBuilder.createQuery(Employee.class);
         Root<Employee> root = criteriaQuery.from(Employee.class);
 
-        Predicate predicate = buildPredicate(criteriaBuilder, root, searchByNom, searchByEmail);
+        Predicate predicate = buildPredicate(criteriaBuilder, root, searchByNom, searchByDepartement, searchByStatus);
         criteriaQuery.where(predicate);
 
         TypedQuery<Employee> typedQuery = entityManager.createQuery(criteriaQuery);
@@ -85,7 +85,7 @@ public class EmployeeService {
     }
 
     private Predicate buildPredicate(CriteriaBuilder criteriaBuilder, Root<Employee> root,
-                                     String searchByNom, String searchByEmail) {
+                                     String searchByNom, String searchBDepartement, String searchByStatus) {
         Predicate predicate = criteriaBuilder.conjunction();
 
         if (searchByNom != null) {
@@ -93,9 +93,13 @@ public class EmployeeService {
                     "%" + searchByNom.toLowerCase() + "%"));
         }
 
-        if (searchByEmail != null) {
-            predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(criteriaBuilder.lower(root.get("email")),
-                    "%" + searchByEmail.toLowerCase() + "%"));
+        if (searchBDepartement != null) {
+            predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(criteriaBuilder.lower(root.get("departement")),
+                    "%" + searchBDepartement.toLowerCase() + "%"));
+        }
+        if (searchByStatus != null) {
+            predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(criteriaBuilder.lower(root.get("statut")),
+                    "%" + searchByStatus.toLowerCase() + "%"));
         }
 
         return predicate;

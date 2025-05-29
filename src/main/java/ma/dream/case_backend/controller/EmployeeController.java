@@ -40,9 +40,10 @@ public class EmployeeController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
             @RequestParam(required = false) final String searchByNom,
-            @RequestParam(required = false) final String searchByEmail
+            @RequestParam(required = false) final String searchByDepartement,
+            @RequestParam(required = false) final String searchByStatus
     ) {
-        Page<EmployeeDto> employees = employeeService.getAllEmployees(page, size, searchByNom, searchByEmail);
+        Page<EmployeeDto> employees = employeeService.getAllEmployees(page, size, searchByNom, searchByDepartement, searchByStatus);
         return ResponseEntity.ok(employees);
     }
 
