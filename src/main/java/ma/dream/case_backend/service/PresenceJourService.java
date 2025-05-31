@@ -12,18 +12,17 @@ import ma.dream.case_backend.dto.PresenceStatutCountDto;
 import ma.dream.case_backend.enums.StatutPresence;
 import ma.dream.case_backend.exceptions.TechnicalException;
 import ma.dream.case_backend.mapper.PresenceJourMapper;
+import ma.dream.case_backend.model.Employee;
 import ma.dream.case_backend.model.PresenceJour;
 import ma.dream.case_backend.repository.PresenceJourRepository;
 import ma.dream.case_backend.util.constants.GlobalConstants;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -58,13 +57,16 @@ public class PresenceJourService {
         return presenceJourRepository.save(presenceJour);
     }
 
-    public Page<PresenceJourDto> getAllPresenceJour(int page, int size, String searchByNom) {
-        log.debug("Start service Get Presences page: {} size: {} searchByNom: {} ", page, size, searchByNom);
-        Pageable pageable = PageRequest.of(page, size);
+    public Page<PresenceJourDto> getAllPresenceJour(int page, int size, String searchByNom, String searchByStatus, String searchByShift, String sortBy, String direction) {
+        log.debug("Start service Get Presences page: {} size: {} sortBy: {} direction: {} searchByNom: {} searchByStatus: {} searchByShift: {}",
+                page, size, sortBy, direction, searchByNom, searchByStatus, searchByShift);
+
+        Sort sort = direction.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
         Page<PresenceJour> presenceJours;
 
-        if (searchByNom != null ) {
-            presenceJours = filterPresenceJours(searchByNom, pageable);
+        if (searchByNom != null || searchByStatus != null || searchByShift != null) {
+            presenceJours = filterPresenceJours(searchByNom, searchByStatus, searchByShift, pageable);
         } else {
             presenceJours = presenceJourRepository.findAll(pageable);
         }
@@ -76,16 +78,26 @@ public class PresenceJourService {
         return new PageImpl<>(presenceJourDtos, pageable, presenceJours.getTotalElements());
     }
 
-    private Page<PresenceJour> filterPresenceJours(String searchByNom, Pageable pageable) {
-        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<PresenceJour> criteriaQuery = criteriaBuilder.createQuery(PresenceJour.class);
-        Root<PresenceJour> root = criteriaQuery.from(PresenceJour.class);
+    private Page<PresenceJour> filterPresenceJours(String searchByNom, String searchByStatus, String searchByShift, Pageable pageable) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<PresenceJour> cq = cb.createQuery(PresenceJour.class);
+        Root<PresenceJour> root = cq.from(PresenceJour.class);
 
-        Predicate predicate = buildPredicate(criteriaBuilder, root, searchByNom);
-        criteriaQuery.where(predicate);
+        Predicate predicate = buildPredicate(cb, root, searchByNom, searchByStatus, searchByShift);
+        cq.where(predicate);
 
-        TypedQuery<PresenceJour> typedQuery = entityManager.createQuery(criteriaQuery);
+        if (!pageable.getSort().isEmpty()) {
+            List<Order> orders = new ArrayList<>();
+            for (Sort.Order order : pageable.getSort()) {
+                Path<Object> path = root.get(order.getProperty());
+                orders.add(order.isAscending() ? cb.asc(path) : cb.desc(path));
+            }
+            cq.orderBy(orders);
+        }
+
+        TypedQuery<PresenceJour> typedQuery = entityManager.createQuery(cq);
         long totalCount = typedQuery.getResultList().size();
+
         typedQuery.setFirstResult((int) pageable.getOffset());
         typedQuery.setMaxResults(pageable.getPageSize());
         List<PresenceJour> resultList = typedQuery.getResultList();
@@ -93,7 +105,8 @@ public class PresenceJourService {
         return new PageImpl<>(resultList, pageable, totalCount);
     }
 
-    private Predicate buildPredicate(CriteriaBuilder criteriaBuilder, Root<PresenceJour> root, String searchByNom) {
+    private Predicate buildPredicate(CriteriaBuilder criteriaBuilder, Root<PresenceJour> root,
+                                     String searchByNom, String searchByStatus, String searchByShift) {
         Predicate predicate = criteriaBuilder.conjunction();
 
         if (searchByNom != null && !searchByNom.isEmpty()) {
@@ -105,6 +118,19 @@ public class PresenceJourService {
                     )
             );
         }
+
+
+        if (searchByStatus != null) {
+            predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(criteriaBuilder.lower(root.get("statut")),
+                    "%" + searchByStatus.toLowerCase() + "%"));
+        }
+
+        if (searchByShift != null) {
+            predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(criteriaBuilder.lower(root.get("shift")),
+                    "%" + searchByShift.toLowerCase() + "%"));
+        }
+
+
 
         return predicate;
     }

@@ -39,9 +39,13 @@ public class PresenceJourController {
     public ResponseEntity<Page<PresenceJourDto>> getAllPresenceJour(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
-            @RequestParam(required = false) final String searchByNom
+            @RequestParam(required = false) final String searchByNom,
+            @RequestParam(required = false) final String searchByStatus,
+            @RequestParam(required = false) final String searchByShift,
+            @RequestParam(defaultValue = "lastUpdateDate") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction
     ) {
-        Page<PresenceJourDto> presenceJours = presenceJourService.getAllPresenceJour(page, size, searchByNom);
+        Page<PresenceJourDto> presenceJours = presenceJourService.getAllPresenceJour(page, size, searchByNom, searchByStatus, searchByShift, sortBy, direction);
         return ResponseEntity.ok(presenceJours);
     }
 
