@@ -10,7 +10,9 @@ import ma.dream.case_backend.exceptions.TechnicalException;
 import ma.dream.case_backend.model.PresenceJour;
 import ma.dream.case_backend.service.PresenceJourService;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -82,6 +84,51 @@ public class PresenceJourController {
     public ResponseEntity<List<PresenceStatutCountDto>> getPresenceStatutsCountToday() {
         List<PresenceStatutCountDto> result = presenceJourService.countPresenceStatutsToday();
         return ResponseEntity.ok(result);
+    }
+
+
+    @Operation(summary = "Export PresenceJour data", description = "Exporte les données de présence dans un format spécifié (CSV, Excel, etc.)")
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> exportPresenceJour(
+            @RequestParam(defaultValue = "csv") String format,
+            @RequestParam(required = false) final String searchByNom,
+            @RequestParam(required = false) final String searchByStatus,
+            @RequestParam(required = false) final String searchByShift,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(defaultValue = "false") boolean exportAll
+    ) {
+        try {
+            byte[] exportData;
+
+
+            exportData = presenceJourService.exportPresenceJourPage(format, searchByNom, searchByStatus, searchByShift, page, size);
+
+
+            HttpHeaders headers = new HttpHeaders();
+            String contentType;
+            String fileName;
+
+            switch (format.toLowerCase()) {
+                case "excel":
+                    contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                    fileName = "presences.xlsx";
+                    break;
+                case "csv":
+                default:
+                    contentType = "text/csv";
+                    fileName = "presences.csv";
+                    break;
+            }
+
+            headers.setContentType(MediaType.parseMediaType(contentType));
+            headers.setContentDispositionFormData("attachment", fileName);
+
+            return new ResponseEntity<>(exportData, headers, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Error exporting presence data: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
     }
 
 }

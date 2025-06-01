@@ -26,6 +26,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.poi.xssf.usermodel.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+
 @Service
 @AllArgsConstructor
 @Slf4j
@@ -191,6 +200,132 @@ public class PresenceJourService {
         return results.stream()
                 .map(row -> new PresenceStatutCountDto((StatutPresence) row[0], (Long) row[1]))
                 .collect(Collectors.toList());
+    }
+
+    public byte[] exportPresenceJourPage(String format, String searchByNom, String searchByStatus,
+                                         String searchByShift, Integer page, Integer size) throws TechnicalException {
+        try {
+            // Définir des valeurs par défaut si page ou size sont null
+            int pageNumber = (page != null) ? page : 0;
+            int pageSize = (size != null) ? size : Integer.MAX_VALUE;
+
+            // Récupérer les données paginées
+            Page<PresenceJourDto> presencePage = getAllPresenceJour(
+                    pageNumber,
+                    pageSize,
+                    searchByNom,
+                    searchByStatus,
+                    searchByShift,
+                    "lastUpdateDate",
+                    "desc"
+            );
+
+            // Convertir en liste
+            List<PresenceJourDto> data = presencePage.getContent();
+
+            // Générer le fichier selon le format demandé
+            switch (format.toLowerCase()) {
+                case "excel":
+                    return generateExcelExport(data);
+                case "csv":
+                default:
+                    return generateCsvExport(data);
+            }
+        } catch (Exception e) {
+            log.error("Error during export: {}", e.getMessage());
+            throw new TechnicalException("Export failed: " + e.getMessage());
+        }
+    }
+
+    private byte[] generateExcelExport(List<PresenceJourDto> data) throws IOException {
+        try (XSSFWorkbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
+            XSSFSheet sheet = workbook.createSheet("Presences");
+
+            // Création de l'en-tête
+            Row headerRow = sheet.createRow(0);
+            String[] headers = {
+                    "ID", "Employee ID", "Employee Name", "First In",
+                    "Break Time", "Last Out", "Total Hours",
+                    "Status", "Shift", "Note", "Creation Date", "Last Update"
+            };
+
+            for (int i = 0; i < headers.length; i++) {
+                headerRow.createCell(i).setCellValue(headers[i]);
+            }
+
+            // Remplissage des données
+            int rowNum = 1;
+            for (PresenceJourDto dto : data) {
+                Row row = sheet.createRow(rowNum++);
+
+                row.createCell(0).setCellValue(dto.getPresenceJourId() != null ? dto.getPresenceJourId() : 0);
+                row.createCell(1).setCellValue(dto.getEmployeeId() != null ? dto.getEmployeeId() : 0);
+                row.createCell(2).setCellValue(dto.getEmployeeName() != null ? dto.getEmployeeName() : "");
+                row.createCell(3).setCellValue(dto.getFirstIn() != null ? dto.getFirstIn().toString() : "");
+                row.createCell(4).setCellValue(dto.getBreakTime() != null ? dto.getBreakTime().toString() : "");
+                row.createCell(5).setCellValue(dto.getLastOut() != null ? dto.getLastOut().toString() : "");
+                row.createCell(6).setCellValue(dto.getTotalHeures() != null ? formatDuration(dto.getTotalHeures()) : "");
+                row.createCell(7).setCellValue(dto.getStatut() != null ? dto.getStatut().name() : "");
+                row.createCell(8).setCellValue(dto.getShift() != null ? dto.getShift() : "");
+                row.createCell(9).setCellValue(dto.getNote() != null ? dto.getNote() : "");
+            }
+
+            // Auto-size columns
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            workbook.write(out);
+            return out.toByteArray();
+        }
+    }
+
+    private byte[] generateCsvExport(List<PresenceJourDto> data) throws TechnicalException {
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream();
+             PrintWriter writer = new PrintWriter(new OutputStreamWriter(out))) {
+
+            // En-tête CSV
+            writer.println("ID,Employee ID,Employee Name,First In,Break Time,Last Out,Total Hours,Status,Shift,Note");
+
+            // Données CSV
+            for (PresenceJourDto dto : data) {
+                writer.println(String.join(",",
+                        dto.getPresenceJourId() != null ? dto.getPresenceJourId().toString() : "",
+                        dto.getEmployeeId() != null ? dto.getEmployeeId().toString() : "",
+                        escapeCsv(dto.getEmployeeName()),
+                        dto.getFirstIn() != null ? dto.getFirstIn().toString() : "",
+                        dto.getBreakTime() != null ? dto.getBreakTime().toString() : "",
+                        dto.getLastOut() != null ? dto.getLastOut().toString() : "",
+                        dto.getTotalHeures() != null ? formatDuration(dto.getTotalHeures()) : "",
+                        dto.getStatut() != null ? dto.getStatut().name() : "",
+                        escapeCsv(dto.getShift()),
+                        escapeCsv(dto.getNote())
+                ));
+            }
+
+            writer.flush();
+            return out.toByteArray();
+        } catch (IOException e) {
+            String errorMessage = "CSV generation failed: " + e.getMessage();
+            log.error(errorMessage, e);
+            throw new TechnicalException(errorMessage);
+        }
+    }
+
+    private String escapeCsv(String value) {
+        if (value == null) return "";
+        if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
+            return "\"" + value.replace("\"", "\"\"") + "\"";
+        }
+        return value;
+    }
+
+    private String formatDuration(Duration duration) {
+        long hours = duration.toHours();
+        long minutes = duration.minusHours(hours).toMinutes();
+        return String.format("%dh %02dm", hours, minutes);
     }
 
 
