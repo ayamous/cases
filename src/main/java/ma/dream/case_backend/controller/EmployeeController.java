@@ -49,6 +49,14 @@ public class EmployeeController {
         return ResponseEntity.ok(employees);
     }
 
+    @Operation(summary = "Retrieve all employees", description = "Récupère la liste de tous les employés")
+    @GetMapping("/find/all")
+    public ResponseEntity<List<EmployeeDto>> findAllEmployees() {
+        List<EmployeeDto> employees = employeeService.findAllEmployees();
+        return ResponseEntity.ok(employees);
+    }
+
+
 
     @Operation(summary = "Update employee details", description = "Récupère les détails d'un employee par ID")
     @PutMapping("/{id}")

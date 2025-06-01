@@ -113,6 +113,14 @@ public class EmployeeService {
         return predicate;
     }
 
+
+    public List<EmployeeDto> findAllEmployees() {
+        return employeRepository.findAll()
+                .stream()
+                .map(employeeMapper::toEmployeeDto)
+                .collect(Collectors.toList());
+    }
+
     public EmployeeDto updateEmployee(Long id, EmployeeDto employeeDto) throws TechnicalException {
         log.debug("Start service update employee id {}", id);
         Employee employee = employeRepository.findById(id)
